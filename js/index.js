@@ -1,9 +1,8 @@
-//Variables
 var is_mouse_down = false;
 var filter_size = 10;
 var brush_size = 1;
 var color = '#000000';
-//Objects
+
 const sampler = {
     sample: (p) => {
         moving_average_unit.send_raw_point(p);
@@ -11,7 +10,7 @@ const sampler = {
 };
 
 const moving_average_unit = {
-    _raw_buffer: [],//Has a threshold size to start to send data to the filter
+    _raw_buffer: [],
     _last_index: 0,
     send_raw_point: (p) => {
         moving_average_unit._raw_buffer.push(p);
@@ -87,18 +86,14 @@ const filter_size_selector = document.getElementById('filter-size');
 const brush_size_selector = document.getElementById('brush-size');
 const color_selector = document.getElementById('color');
 
-//Callbacks
 function mouse_down()
 {
-    //Set is_mouse_down flag
     is_mouse_down = true;
 }
 
 function mouse_up()
 {
-    //Reset is_mouse_down flag
     is_mouse_down = false;
-    //Flush and clear sampler buffer
     painter.end_paint();
     moving_average_unit.reset();
 }
@@ -109,7 +104,6 @@ function mouse_out()
 
 function mouse_move(e)
 {
-    //If is_mouse_down, send points to sampler
     if (is_mouse_down)
     {
         sampler.sample({x: e.offsetX, y: e.offsetY});
@@ -154,7 +148,6 @@ function init()
     document.body.onmousedown = mouse_down;
     document.body.onmouseup = mouse_up;
     document.body.onmousemove = mouse_move;
-    // canvas.onmouseout = mouse_out;
     
     filter_size_selector.onchange = change_filter_size;
     brush_size_selector.onchange = change_brush_size;
@@ -163,14 +156,9 @@ function init()
     painter.init(canvas);
     canvas.width =  window.innerWidth;
     canvas.height =  window.innerHeight;
-    // document.getElementById('options').style.width = window.innerWidth;
 }
 
-
-//Helper functions
 const clamp = (t, min, max) => t < min ? min :
                                t > max ? max : t;
-
-
 
 init();
