@@ -1,7 +1,10 @@
 var is_mouse_down = false;
-var filter_size = 10;
-var brush_size = 1;
-var color = '#000000';
+
+const config = {
+    filter_size: 10,
+    brush_size: 1,
+    color: '#000000',
+}
 
 const sampler = {
     sample: (p) => {
@@ -19,7 +22,7 @@ const moving_average_unit = {
             let i;
             for (i = moving_average_unit._last_index; i < moving_average_unit._raw_buffer.length; i++)
             {
-                moving_average_unit.filter(moving_average_unit._raw_buffer, i, filter_size);
+                moving_average_unit.filter(moving_average_unit._raw_buffer, i, config.filter_size);
             }
             moving_average_unit._last_index = i;
         }
@@ -57,13 +60,14 @@ const painter = {
         }
         _ctx.strokeStyle = '#000000';
         painter.ctx = _ctx;
+        paint_history.push_frame(painter.ctx.getImageData(0, 0, canvas.width, canvas.height));
     },
     ctx: null,
     _painting: false,
     begin_paint: (p) => {
         painter._painting = true;
-        painter.ctx.strokeStyle = color;
-        painter.ctx.lineWidth = brush_size;
+        painter.ctx.strokeStyle = config.color;
+        painter.ctx.lineWidth = config.brush_size;
         painter.ctx.beginPath();
         painter.ctx.moveTo(p.x, p.y);
     },
@@ -78,8 +82,43 @@ const painter = {
     },
     end_paint: () => {
         painter._painting = false;
+        paint_history.push_frame(painter.ctx.getImageData(0, 0, canvas.width, canvas.height));
+    },
+    undo: () => {
+        painter.ctx.putImageData(paint_history.undo(), 0, 0);
+    },
+    redo: () => {
+        painter.ctx.putImageData(paint_history.redo(), 0, 0);
     }
 }
+
+const paint_history = {
+    _history: [],
+    _currentidx: -1,
+    _max_history_size: 10,
+    undo: () => {
+        paint_history._currentidx = Math.max(paint_history._currentidx - 1, 0);
+        console.log(paint_history._currentidx);
+        return paint_history._history[paint_history._currentidx];
+    },
+    redo: () => {
+        paint_history._currentidx = Math.min(paint_history._currentidx + 1, paint_history._history.length - 1);
+        console.log(paint_history._currentidx);
+        return paint_history._history[paint_history._currentidx];
+    },
+    push_frame: (frame) => {
+        paint_history._history = paint_history._history.slice(0, paint_history._currentidx + 1);
+        paint_history._history.push(frame)
+        if (paint_history._history.length >= paint_history._max_history_size)
+        {
+            paint_history._history.shift()
+            return;
+        }
+        paint_history._currentidx++;
+        console.log(paint_history._currentidx);
+    },
+}
+
 
 const canvas = document.getElementById('canvas');
 const filter_size_selector = document.getElementById('filter-size');
@@ -113,34 +152,52 @@ function mouse_move(e)
 
 function change_filter_size()
 {
-    filter_size = filter_size_selector.value;
+    config.filter_size = filter_size_selector.value;
     try{
-        filter_size = Number.parseInt(filter_size);
-        if (Number.isNaN(filter_size))
-            filter_size = 10;
+        config.filter_size = Number.parseInt(config.filter_size);
+        if (Number.isNaN(config.filter_size))
+            config.filter_size = 10;
     } catch(e)
     {
-        filter_size = 10;
+        config.filter_size = 10;
     }
 }
 
 function change_brush_size()
 {
-    brush_size = brush_size_selector.value;
+    config.brush_size = brush_size_selector.value;
     try{
-        brush_size = Number.parseInt(brush_size);
-        if (Number.isNaN(brush_size))
-        brush_size = 1;
+        config.brush_size = Number.parseInt(config.brush_size);
+        if (Number.isNaN(config.brush_size))
+            config.brush_size = 1;
     } catch(e)
     {
-        brush_size = 1;
+        config.brush_size = 1;
     }
 }
 
 function change_color()
 {
-    color = color_selector.value;
-    // color_selector.style.backgroundColor = color;
+    config.color = color_selector.value;
+}
+
+function key_event_handler (e)
+{
+    console.log('event');
+    if (e.ctrlKey)
+    {
+        console.log('ctrl');
+        console.log(e.code);
+        switch(e.code)
+        {
+            case 'KeyZ':
+                painter.undo();
+                break;
+            case 'KeyY':
+                painter.redo();
+                break;
+        }
+    }
 }
 
 function init()
@@ -148,6 +205,7 @@ function init()
     document.body.onmousedown = mouse_down;
     document.body.onmouseup = mouse_up;
     document.body.onmousemove = mouse_move;
+    document.body.onkeypress = key_event_handler;
     
     filter_size_selector.onchange = change_filter_size;
     brush_size_selector.onchange = change_brush_size;
