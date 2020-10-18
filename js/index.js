@@ -95,7 +95,7 @@ const painter = {
 const paint_history = {
     _history: [],
     _currentidx: -1,
-    _max_history_size: 10,
+    _max_history_size: 100,
     undo: () => {
         paint_history._currentidx = Math.max(paint_history._currentidx - 1, 0);
         console.log(paint_history._currentidx);
