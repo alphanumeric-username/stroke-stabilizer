@@ -55,12 +55,11 @@ const painter = {
         const _ctx = canvas.getContext('2d');
         if (!_ctx)
         {
-            console.log('Can\'t paint: Context is null!');
+            console.error('Can\'t paint: Context is null!');
             return;
         }
         _ctx.strokeStyle = '#000000';
         painter.ctx = _ctx;
-        console.log(canvas.width, canvas.height);
         paint_history.push_frame(painter.ctx.getImageData(0, 0, canvas.width, canvas.height));
     },
     ctx: null,
@@ -161,7 +160,6 @@ function update_mouse_down (buttons) {
 function mouse_move(e)
 {
     update_mouse_down(e.buttons);
-    console.log(is_mouse_down);
     if (is_mouse_down)
     {
         sampler.sample({x: e.offsetX, y: e.offsetY});
