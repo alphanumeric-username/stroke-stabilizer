@@ -60,6 +60,7 @@ const painter = {
         }
         _ctx.strokeStyle = '#000000';
         painter.ctx = _ctx;
+        console.log(canvas.width, canvas.height);
         paint_history.push_frame(painter.ctx.getImageData(0, 0, canvas.width, canvas.height));
     },
     ctx: null,
@@ -98,12 +99,10 @@ const paint_history = {
     _max_history_size: 100,
     undo: () => {
         paint_history._currentidx = Math.max(paint_history._currentidx - 1, 0);
-        console.log(paint_history._currentidx);
         return paint_history._history[paint_history._currentidx];
     },
     redo: () => {
         paint_history._currentidx = Math.min(paint_history._currentidx + 1, paint_history._history.length - 1);
-        console.log(paint_history._currentidx);
         return paint_history._history[paint_history._currentidx];
     },
     push_frame: (frame) => {
@@ -115,7 +114,6 @@ const paint_history = {
             return;
         }
         paint_history._currentidx++;
-        console.log(paint_history._currentidx);
     },
 }
 
@@ -141,7 +139,20 @@ function mouse_out()
     // is_mouse_down = false;
 }
 
-const update_mouse_down = (buttons) => is_mouse_down = buttons%2 == 1;
+function update_mouse_down (buttons) {
+    if (buttons%2 == 1)
+    {
+        is_mouse_down = true;
+    } 
+    else 
+    {
+        if (is_mouse_down)
+        {
+            is_mouse_down = false;
+            mouse_up();
+        }
+    }
+}
 
 /**
  * 
@@ -150,6 +161,7 @@ const update_mouse_down = (buttons) => is_mouse_down = buttons%2 == 1;
 function mouse_move(e)
 {
     update_mouse_down(e.buttons);
+    console.log(is_mouse_down);
     if (is_mouse_down)
     {
         sampler.sample({x: e.offsetX, y: e.offsetY});
@@ -190,11 +202,8 @@ function change_color()
 
 function key_event_handler (e)
 {
-    console.log('event');
     if (e.ctrlKey)
     {
-        console.log('ctrl');
-        console.log(e.code);
         switch(e.code)
         {
             case 'KeyZ':
@@ -211,8 +220,6 @@ function init()
 {
     // const listener = document.body;
     const listener = window;
-    listener.onmousedown = mouse_down;
-    listener.onmouseup = mouse_up;
     listener.onmousemove = mouse_move;
     listener.onkeypress = key_event_handler;
     
@@ -220,9 +227,9 @@ function init()
     brush_size_selector.onchange = change_brush_size;
     color_selector.onchange = change_color;
 
-    painter.init(canvas);
     canvas.width =  window.innerWidth;
     canvas.height =  window.innerHeight;
+    painter.init(canvas);
 }
 
 init();
