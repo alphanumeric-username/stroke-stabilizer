@@ -138,11 +138,18 @@ function mouse_up()
 }
 function mouse_out()
 {
-    is_mouse_down = false;
+    // is_mouse_down = false;
 }
 
+const update_mouse_down = (buttons) => is_mouse_down = buttons%2 == 1;
+
+/**
+ * 
+ * @param {MouseEvent} e 
+ */
 function mouse_move(e)
 {
+    update_mouse_down(e.buttons);
     if (is_mouse_down)
     {
         sampler.sample({x: e.offsetX, y: e.offsetY});
@@ -202,10 +209,12 @@ function key_event_handler (e)
 
 function init()
 {
-    document.body.onmousedown = mouse_down;
-    document.body.onmouseup = mouse_up;
-    document.body.onmousemove = mouse_move;
-    document.body.onkeypress = key_event_handler;
+    // const listener = document.body;
+    const listener = window;
+    listener.onmousedown = mouse_down;
+    listener.onmouseup = mouse_up;
+    listener.onmousemove = mouse_move;
+    listener.onkeypress = key_event_handler;
     
     filter_size_selector.onchange = change_filter_size;
     brush_size_selector.onchange = change_brush_size;
@@ -216,7 +225,7 @@ function init()
     canvas.height =  window.innerHeight;
 }
 
+init();
+
 const clamp = (t, min, max) => t < min ? min :
                                t > max ? max : t;
-
-init();
